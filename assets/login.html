@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block view %}login{% endblock %}
+
+{% block title %}Film collection{% endblock %}
+
+{% block content %}
+<form action="" method="post">
+	<fieldset id="inputs">
+	 <input type="text" name="username" placeholder="Username" autofocus required>
+  <input type="password" name="password" placeholder="Password" required>
+ </fieldset>
+ <fieldset id="actions">
+  <input type="submit" value="Log in">
+ </fieldset>
+ {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+ {% endwith %}
+</form>
+{% endblock %}
