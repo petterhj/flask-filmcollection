@@ -1,6 +1,9 @@
+import os
 from datetime import datetime
-from models import Film, ReleaseFormat, Release
+
 from tortoise import Tortoise, run_async
+
+from models import Film, ReleaseFormat, Release
 
 
 films = [
@@ -21,7 +24,7 @@ films = [
 
 async def populate():
     await Tortoise.init(
-        db_url="sqlite://../data/db.sqlite",
+        db_url=os.environ.get("DATABASE_URL"),
         modules={"models": ["models"]},
     )
 

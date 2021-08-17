@@ -2,10 +2,14 @@
 CREATE TABLE IF NOT EXISTS "film" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "title" VARCHAR(255) NOT NULL,
+    "genre" VARCHAR(255),
+    "director" VARCHAR(255),
+    "country" VARCHAR(255),
+    "language" VARCHAR(255),
     "summary" TEXT,
+    "runtime" INT,
     "release_date" DATE,
-    "tmdb_id" VARCHAR(15) NOT NULL UNIQUE,
-    "imdb_id" VARCHAR(15)  UNIQUE
+    "imdb_id" VARCHAR(15) NOT NULL UNIQUE
 );
 CREATE TABLE IF NOT EXISTS "release" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
