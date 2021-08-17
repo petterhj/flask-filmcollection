@@ -43,12 +43,20 @@ class Release(models.Model):
 
 
 FilmSchema = pydantic_model_creator(Film, name="Film")
-ReleaseSchema = pydantic_model_creator(Release)
+ReleaseSchema = pydantic_model_creator(Release, name="Release")
+ReleaseInSchema = pydantic_model_creator(
+    Release,
+    name="ReleaseIn",
+    exclude_readonly=True,
+    exclude={"added_date",}
+)
 
 
 class FilmWithReleasesSchema(FilmSchema):
     releases: List[ReleaseSchema]
 
 
-print(FilmSchema.schema_json(indent=4))
-
+# print(FilmSchema.schema_json(indent=4))
+# print(ReleaseSchema.schema_json(indent=4))
+# print("--" * 10)
+# print(ReleaseInSchema.schema_json(indent=4))
