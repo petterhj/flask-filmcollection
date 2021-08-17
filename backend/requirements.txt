@@ -1,0 +1,5 @@
+aerich==0.5.5
+fastapi
+pydantic
+tortoise-orm[aiosqlite]
+uvicorn[standard]

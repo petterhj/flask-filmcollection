@@ -1,6 +1,0 @@
-peewee
-loguru
-tmdbsimple
-python-dateutil
-beautifulsoup4
-flask-login
