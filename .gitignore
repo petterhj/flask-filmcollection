@@ -1,9 +1,7 @@
 .venv/
 __pycache__/*
-output/*
 data/*
-assets/details/*
-assets/posters/*
+media/*
 *.pyc
 *.log
 *.log*
@@ -15,6 +13,3 @@ assets/posters/*
 folder.jpg
 config.py
 screenshot*.png
-test_*.py
-test.py
-tests.py

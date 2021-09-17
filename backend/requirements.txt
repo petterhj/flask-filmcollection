@@ -1,6 +1,7 @@
 aerich==0.5.5
 fastapi
 pydantic
+python-multipart
 requests
 tortoise-orm[aiosqlite]
 uvicorn[standard]

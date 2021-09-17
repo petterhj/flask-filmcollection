@@ -1,9 +1,27 @@
 from enum import Enum
 from typing import List, Optional
+from datetime import date
 
 from pydantic import BaseModel, constr
-from tortoise import fields, models
-from tortoise.contrib.pydantic import pydantic_model_creator
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+
+
+class Film(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str
+    summary: Optional[str] = None
+    genre: Optional[List[str]] = None
+    director: Optional[List[str]] = None
+    country: Optional[List[str]] = None
+    language: Optional[List[str]] = None
+    summary: Optional[str] = None
+    runtime: Optional[int] = None
+    release_date: Optional[date] = None
+
+
+"""
+# from tortoise import fields, models
+# from tortoise.contrib.pydantic import pydantic_model_creator
 
 
 class Film(models.Model):
@@ -75,3 +93,4 @@ class ReleaseInSchema(BaseModel):
 # print(ReleaseSchema.schema_json(indent=4))
 # print("--" * 10)
 # print(ReleaseInSchema.schema_json(indent=4))
+"""
