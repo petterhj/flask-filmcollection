@@ -1,7 +1,7 @@
-aerich==0.5.5
 fastapi
 pydantic
+python-dotenv
 python-multipart
 requests
-tortoise-orm[aiosqlite]
+sqlmodel
 uvicorn[standard]

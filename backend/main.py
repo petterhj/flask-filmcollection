@@ -1,12 +1,14 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+# from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import ValidationError
+
+load_dotenv()
 
 from database import create_db_and_tables
 from routers import auth, films
-
 
 
 app = FastAPI()

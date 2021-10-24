@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from typing import List, Optional
 from datetime import date
@@ -19,6 +20,23 @@ from .links import (
     FilmCountryLink, FilmLanguageLink
 )
 
+
+class ExportPropertiesMixin(BaseModel):
+    @classmethod
+    def get_properties(cls):
+        return [prop for prop in dir(cls) if isinstance(
+            getattr(cls, prop
+        ), property) and prop not in ("__values__", "fields")]
+
+    def dict(self, *args, **kwargs):
+        attribs = super().dict(*args, **kwargs)
+        props = self.get_properties()
+        if props:
+            attribs.update({
+                prop: getattr(self, prop) for prop in props
+            })
+        return attribs
+    
 
 class ProductionType(str, Enum):
     MOVIE = "movie"
@@ -97,13 +115,19 @@ class Film(FilmBase, table=True):
             return v.replace("min", "").strip()
 
 
-class FilmRead(FilmBase):
+class FilmRead(FilmBase, ExportPropertiesMixin):
     id: int
     genres: List[GenreRead] = []
     directors: List[PersonRead] = []
     writers: List[PersonRead] = []
     countries: List[CountryRead] = []
     languages: List[LanguageRead] = []
+
+    @property
+    def has_poster(self):
+        return os.path.exists(os.path.join(
+            os.environ["MEDIA_ROOT"], "posters", f"{self.id}-poster.jpg"
+        ))
 
 
 class FilmPatch(BaseModel):

@@ -105,6 +105,9 @@ async def add_films(
         os.environ["MEDIA_ROOT"], "posters", f"{film.id}-poster.jpg"
     )
 
+    if not os.path.exists(os.path.dirname(poster_path)):
+        os.makedirs(os.path.dirname(poster_path))
+
     if r["Poster"] and not os.path.isfile(poster_path):
         r = requests.get(r["Poster"], stream=True)
         if r.status_code == 200:

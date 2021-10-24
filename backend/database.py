@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException
 from models.film import Film
 
 
-sqlite_url = os.environ.get("DATABASE_URL")
+sqlite_url = os.environ["DATABASE_URL"]
 
 connect_args = {"check_same_thread": False}
 engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
