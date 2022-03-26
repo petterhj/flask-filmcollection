@@ -34,7 +34,7 @@ async def get_film_from_database(
     session: Session = Depends(get_session),
 ) -> Film:
     film = session.get(Film, film_id)
-    
+
     if not film:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

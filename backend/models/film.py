@@ -36,7 +36,7 @@ class ExportPropertiesMixin(BaseModel):
                 prop: getattr(self, prop) for prop in props
             })
         return attribs
-    
+
 
 class ProductionType(str, Enum):
     MOVIE = "movie"
@@ -117,6 +117,15 @@ class Film(FilmBase, table=True):
 
 class FilmRead(FilmBase, ExportPropertiesMixin):
     id: int
+
+    @property
+    def has_poster(self):
+        return os.path.exists(os.path.join(
+            os.environ["MEDIA_ROOT"], "posters", f"{self.id}-poster.jpg"
+        ))
+
+
+class FilmReadDetails(FilmRead):
     genres: List[GenreRead] = []
     directors: List[PersonRead] = []
     writers: List[PersonRead] = []

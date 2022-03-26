@@ -1,17 +1,28 @@
 import os
 import shutil
 import requests
-from datetime import datetime   
+from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    status,
+)
 from fastapi.responses import RedirectResponse, FileResponse
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from database import get_session, get_film_from_database
 from models.country import Country
-from models.film import Film, FilmRead, FilmPatch
+from models.film import (
+    Film,
+    FilmPatch,
+    FilmRead,
+    FilmReadDetails,
+)
 from models.genre import Genre
 from models.language import Language
 from models.people import Person
@@ -120,15 +131,15 @@ async def add_films(
 
 @router.get(
     "/{film_id}",
-    response_model=FilmRead,
+    response_model=FilmReadDetails,
     response_model_by_alias=False,
 )
 async def get_film(
     film: Film = Depends(get_film_from_database)
 ):
     return film
-    
-    
+
+
 @router.patch(
     "/{film_id}",
     response_model=FilmRead,
@@ -138,7 +149,7 @@ async def get_film(
     patch: FilmPatch,
     film: Film = Depends(get_film_from_database),
     session: Session = Depends(get_session),
-):  
+):
     patch = patch.dict(exclude_unset=True)
 
     if not patch:
