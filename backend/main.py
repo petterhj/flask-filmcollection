@@ -8,12 +8,17 @@ from pydantic import ValidationError
 load_dotenv()
 
 from database import create_db_and_tables
-from routers import auth, films
+from routers import (
+    auth,
+    films,
+    genres,
+)
 
 
 app = FastAPI()
 app.include_router(auth.router)
 app.include_router(films.router)
+app.include_router(genres.router)
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

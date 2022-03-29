@@ -5,12 +5,19 @@ from sqlmodel import SQLModel, create_engine, Session, select
 from fastapi import Depends, HTTPException
 
 from models.film import Film
+from models.genre import Genre
+from models.media import CollectedMedia
 
 
 sqlite_url = os.environ["DATABASE_URL"]
 
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
+engine = create_engine(
+    sqlite_url,
+    echo=True,
+    connect_args={
+        "check_same_thread": False,
+    },
+)
 
 
 class Session(Session):
@@ -30,15 +37,26 @@ def get_session():
 
 
 async def get_film_from_database(
-    film_id: int,
+    slug: str,
     session: Session = Depends(get_session),
 ) -> Film:
-    film = session.get(Film, film_id)
+    if film := session.first_or_none(Film, Film.lb_slug == slug):
+        return film
 
-    if not film:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Film not found"
-        )
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Film not found"
+    )
 
-    return film
+
+async def get_genre_from_database(
+    slug: str,
+    session: Session = Depends(get_session),
+) -> Genre:
+    if genre := session.first_or_none(Genre, Genre.slug == slug):
+        return genre
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Genre not found"
+    )

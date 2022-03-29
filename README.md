@@ -6,6 +6,8 @@
 export DATABASE_URL=sqlite:///../data/db.sqlite
 export MEDIA_ROOT=../media
 export OMDB_API_KEY=<api_key>
+export LB_USERNAME=<letterboxd_username>
+export LB_LISTS=<media_type>:<list_slug>,[<media_type>:<list_slug>]
 ```
 
 ## Development

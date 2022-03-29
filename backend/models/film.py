@@ -1,7 +1,7 @@
 import os
 from enum import Enum
-from typing import List, Optional
-from datetime import date
+from typing import List, Optional, TYPE_CHECKING
+from datetime import datetime, date
 from pydantic import validator
 
 from pydantic import BaseModel
@@ -11,14 +11,16 @@ from sqlmodel import (
     Field, SQLModel, Relationship
 )
 
-from .genre import Genre, GenreRead
-from .people import Person, PersonRead
-from .language import Language, LanguageRead
 from .country import Country, CountryRead
+from .genre import Genre, GenreRead
+from .language import Language, LanguageRead
 from .links import (
     FilmGenreLink, FilmDirectorLink, FilmWriterLink,
     FilmCountryLink, FilmLanguageLink
 )
+from .media import CollectedMedia, CollectedMediaRead
+from .people import Person, PersonRead
+
 
 
 class ExportPropertiesMixin(BaseModel):
@@ -44,8 +46,7 @@ class ProductionType(str, Enum):
 
 
 class FilmBase(SQLModel):
-    title: str = Field(...,
-        alias="Title",
+    title: str = Field(
         min_length=1,
         max_length=125,
     )
@@ -53,8 +54,12 @@ class FilmBase(SQLModel):
         min_length=1,
         max_length=125,
     )
-    year: int = Field(..., alias="Year")
-    imdb_id: str = Field(
+    year: int
+    lb_slug: str = Field(
+        sa_column=Column("lb_slug", String, unique=True),
+        regex="^[a-z0-9]+(?:-[a-z0-9]+)*$",
+    )
+    imdb_id: Optional[str] = Field(
         sa_column=Column("imdb_id", String, unique=True),
         regex="^tt\d{7,8}$",
     )
@@ -62,16 +67,12 @@ class FilmBase(SQLModel):
         sa_column=Column("tmdb_id", String, unique=True),
         regex="[0-9]+",
     )
-    lb_slug: Optional[str] = Field(
-        sa_column=Column("lb_slug", String, unique=True),
-        regex="^[a-z0-9]+(?:-[a-z0-9]+)*$",
-    )
-    release_date: Optional[date] = Field(None, alias="Released")
-    summary: Optional[str] = Field(None, alias="Plot")
-    runtime: Optional[int] = Field(None, alias="Runtime")
-    meta_score: Optional[int] = Field(None, alias="Metascore")
-    imdb_rating: Optional[float] = Field(None, alias="imdbRating")
-    production_type: ProductionType = Field(..., alias="Type")
+    release_date: Optional[date]
+    summary: Optional[str]
+    runtime: Optional[int]
+    meta_score: Optional[int]
+    imdb_rating: Optional[float]
+    production_type: ProductionType = Field(ProductionType.MOVIE)
 
     class Config:
         allow_population_by_field_name = True
@@ -102,21 +103,14 @@ class Film(FilmBase, table=True):
         link_model=FilmLanguageLink,
         back_populates="films",
     )
-
-    @validator("year", pre=True)
-    def validate_year(cls, v):
-        if isinstance(v, str):
-            return v[0:4] # Make sure only first year (if tv show) is used
-        return v
-
-    @validator("runtime", pre=True)
-    def validate_runtime(cls, v):
-        if isinstance(v, str):
-            return v.replace("min", "").strip()
+    media: List[CollectedMedia] = Relationship(
+        back_populates="film",
+    )
 
 
 class FilmRead(FilmBase, ExportPropertiesMixin):
     id: int
+    media: List[CollectedMediaRead] = []
 
     @property
     def has_poster(self):
@@ -139,18 +133,43 @@ class FilmReadDetails(FilmRead):
         ))
 
 
-class FilmPatch(BaseModel):
-    title: Optional[str]
+class FilmPatch(FilmBase):
+    title: Optional[str] = Field(alias="Title")
     display_title: Optional[str]
-    year: Optional[int]
-    release_date: Optional[date]
-    summary: Optional[str]
-    runtime: Optional[int]
+    year: Optional[int] = Field(alias="Year")
+    release_date: Optional[date] = Field(alias="Released")
+    summary: Optional[str] = Field(alias="Plot")
+    runtime: Optional[int] = Field(alias="Runtime")
     imdb_id: Optional[str]
     tmdb_id: Optional[str]
     lb_slug: Optional[str]
-    meta_score: Optional[int]
-    imdb_rating: Optional[float]
+    meta_score: Optional[int] = Field(alias="Metascore")
+    imdb_rating: Optional[float] = Field(alias="imdbRating")
+    production_type: ProductionType = Field(alias="Type")
+
+    genres: Optional[List[Genre]] = []
+    directors: Optional[List[Person]] = []
+    writers: Optional[List[Person]] = []
+    countries: Optional[List[Country]] = []
+    languages: Optional[List[Language]] = []
+
+    @validator("release_date", pre=True)
+    def validate_release_date(cls, v):
+        try:
+            return datetime.strptime(v, "%d %b %Y")
+        except TypeError:
+            return v
+
+    @validator("year", pre=True)
+    def validate_year(cls, v):
+        if isinstance(v, str):
+            return v[0:4] # Make sure only first year (if tv show) is used
+        return v
+
+    @validator("runtime", pre=True)
+    def validate_runtime(cls, v):
+        if isinstance(v, str):
+            return v.replace("min", "").strip()
 
     class Config:
-        extra = "forbid"
+        extra = "ignore"
