@@ -9,7 +9,7 @@ load_dotenv()
 
 from database import engine, Session
 from models.film import Film
-from models.letterboxd import LetterboxdList, LetterboxdFilm
+from models.services import LetterboxdList, LetterboxdFilm
 from models.media import CollectedMedia, MediaType
 
 LETTERBOXD_LIST_URL = "https://letterboxd.com/{}/list/{}/detail/page/{}"

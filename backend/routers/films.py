@@ -26,6 +26,7 @@ from models.film import (
 from models.genre import Genre
 from models.language import Language
 from models.people import Person
+from models.services import OmdbSearchResult
 
 
 router = APIRouter(prefix="/films")
@@ -34,7 +35,7 @@ router = APIRouter(prefix="/films")
 @router.get(
     "/",
     response_model=List[FilmRead],
-    response_model_by_alias=False,
+    # response_model_by_alias=False,
 )
 async def get_films(session: Session = Depends(get_session)):
     return session.exec(select(Film)).all()
@@ -43,7 +44,7 @@ async def get_films(session: Session = Depends(get_session)):
 @router.get(
     "/{slug}",
     response_model=FilmReadDetails,
-    response_model_by_alias=False,
+    # response_model_by_alias=False,
 )
 async def get_film(
     film: Film = Depends(get_film_from_database)
@@ -54,7 +55,7 @@ async def get_film(
 @router.patch(
     "/{slug}",
     response_model=FilmReadDetails,
-    response_model_by_alias=False,
+    # response_model_by_alias=False,
 )
 async def get_film(
     patch: FilmPatch,
@@ -109,10 +110,37 @@ async def get_film_poster(
     return FileResponse(poster_path)
 
 
+
+@router.get(
+    "/{slug}/search",
+    response_model=List[OmdbSearchResult],
+    response_model_by_alias=False,
+)
+async def add_films(
+    film: Film = Depends(get_film_from_database),
+    session: Session = Depends(get_session),
+    # token: str = Depends(oauth2_scheme)
+):
+    r = requests.get("http://www.omdbapi.com", params={
+        "apikey": os.environ["OMDB_API_KEY"],
+        "s": film.title,
+        "y": film.year,
+    }).json()
+
+    if r["Response"] == "False":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=r["Error"],
+        )
+    
+    return [OmdbSearchResult(**film) for film in r["Search"]]
+
+
+
 @router.get(
     "/{slug}/refresh",
     response_model=FilmReadDetails,
-    response_model_by_alias=False,
+    # response_model_by_alias=False,
 )
 async def add_films(
     film: Film = Depends(get_film_from_database),
@@ -133,18 +161,8 @@ async def add_films(
 
     film_patch = FilmPatch.parse_obj({**r, **{"imdb_id": imdb_id}})
 
-    print("-" * 100)
-    print(film_patch.json(indent=4))
-    print("-" * 100)
-    print(film_patch.dict())
-    print("-" * 100)
-    print(film_patch.dict(exclude_unset=True))
-    print("-" * 100)
-    print(film_patch.dict(exclude_defaults=True))
-    print("-" * 100)
-
-    # for key, value in film_patch.dict(exclude_unset=True).items():
-    #     setattr(film, key, value)
+    for key, value in film_patch.dict(exclude_defaults=True).items():
+        setattr(film, key, value)
 
     for genre_name in [g.strip() for g in r["Genre"].split(",")]:
         existing = session.first_or_none(Genre, Genre.name == genre_name)
