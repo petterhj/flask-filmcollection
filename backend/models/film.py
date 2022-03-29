@@ -50,28 +50,27 @@ class FilmBase(SQLModel):
         min_length=1,
         max_length=125,
     )
-    display_title: Optional[str] = Field(None,
+    display_title: str = Field(None,
         min_length=1,
         max_length=125,
     )
     year: int
     lb_slug: str = Field(
+        None,
         sa_column=Column("lb_slug", String, unique=True),
         regex="^[a-z0-9]+(?:-[a-z0-9]+)*$",
     )
-    imdb_id: Optional[str] = Field(
+    imdb_id: str = Field(
+        None,
         sa_column=Column("imdb_id", String, unique=True),
         regex="^tt\d{7,8}$",
     )
-    tmdb_id: Optional[str] = Field(
+    tmdb_id: str = Field(
+        None,
         sa_column=Column("tmdb_id", String, unique=True),
         regex="[0-9]+",
     )
-    release_date: Optional[date]
-    summary: Optional[str]
-    runtime: Optional[int]
-    meta_score: Optional[int]
-    imdb_rating: Optional[float]
+    release_date: date = None
     production_type: ProductionType = Field(ProductionType.MOVIE)
 
     class Config:
@@ -81,7 +80,11 @@ class FilmBase(SQLModel):
 
 
 class Film(FilmBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(None, primary_key=True)
+    summary: str
+    runtime: int
+    meta_score: int
+    imdb_rating: float
 
     genres: List[Genre] = Relationship(
         link_model=FilmGenreLink,
@@ -120,6 +123,11 @@ class FilmRead(FilmBase, ExportPropertiesMixin):
 
 
 class FilmReadDetails(FilmRead):
+    summary: Optional[str]
+    runtime: Optional[int]
+    meta_score: Optional[int]
+    imdb_rating: Optional[float]
+
     genres: List[GenreRead] = []
     directors: List[PersonRead] = []
     writers: List[PersonRead] = []
@@ -168,8 +176,9 @@ class FilmPatch(FilmBase):
 
     @validator("runtime", pre=True)
     def validate_runtime(cls, v):
-        if isinstance(v, str):
-            return v.replace("min", "").strip()
+        if isinstance(v, str) and v != "N/A":
+            return int(v.replace("min", "").strip())
+        return v
 
     class Config:
         extra = "ignore"
