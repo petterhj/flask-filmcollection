@@ -4,6 +4,8 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from loguru import logger
+from sqlalchemy.orm import load_only
+from sqlmodel import select
 
 load_dotenv()
 
@@ -38,7 +40,7 @@ def scrape_letterboxd_list(letterboxd_list: LetterboxdList) -> LetterboxdList:
 
         logger.debug(f"Found {len(film_list)} film(s)")
 
-        for film in film_list:
+        for i, film in enumerate(film_list):
             film_details = film.find("div", class_="film-detail-content")
             title = film_details.find("a")
             slug = title["href"].replace("/film/", "").replace("/", "").strip()
@@ -49,7 +51,10 @@ def scrape_letterboxd_list(letterboxd_list: LetterboxdList) -> LetterboxdList:
                 title=title,
                 year=year,
             ))
-            break
+            # TODO: Temporary test, remove this
+            if i == 2:
+                break
+        # TODO: Remove this
         break
 
         next_button = soup.find('a', class_='next')
@@ -72,10 +77,13 @@ def sync_letterboxd_list(
 
     session = Session(engine)
 
+    lb_slugs = []
+
     for lb_film in letterboxd_list.films:
         if film := session.first_or_none(Film, Film.lb_slug == lb_film.slug):
             logger.debug(f"Skipping film {lb_film.slug} (already in database)")
         else:
+            # Add new film to database
             film = Film(
                 title=lb_film.title,
                 year=lb_film.year,
@@ -89,17 +97,39 @@ def sync_letterboxd_list(
             CollectedMedia.film == film,
             CollectedMedia.media_type == letterboxd_list.media_type,
         ):
-            logger.debug("Skipping existing media {} for {} (already in database)".format(
-                media.media_type, film.lb_slug
-            ))
+            if not media.in_lb_list:
+                media.in_lb_list = True
+                session.add(media)
+                session.commit()
         else:
+            # Add new collected media to film
             session.add(CollectedMedia(
                 media_type=letterboxd_list.media_type,
                 film=film,
             ))
             session.commit()
+        
+        lb_slugs.append(film.lb_slug)
 
-    # Delete
+    # Flag collected media no longer present in remote list
+    collected_not_in_remote = [
+        film.lb_slug for film in session.query(
+            Film
+        ).options(
+            load_only("lb_slug")
+        ).filter(
+            Film.media.any(CollectedMedia.media_type == media_type)
+        ).all() if film.lb_slug not in lb_slugs
+    ]
+
+    for slug in collected_not_in_remote:
+        if film := session.first_or_none(Film, Film.lb_slug == slug):
+            logger.info(f"Flagging {slug}:media:{media_type} as missing from remote list")
+            for media in film.media:
+                media.in_lb_list = False
+                session.add(media)
+
+    session.commit()
 
 
 if __name__ == "__main__":

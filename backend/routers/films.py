@@ -110,7 +110,6 @@ async def get_film_poster(
     return FileResponse(poster_path)
 
 
-
 @router.get(
     "/{slug}/search",
     response_model=List[OmdbSearchResult],
@@ -134,7 +133,6 @@ async def add_films(
         )
     
     return [OmdbSearchResult(**film) for film in r["Search"]]
-
 
 
 @router.get(
