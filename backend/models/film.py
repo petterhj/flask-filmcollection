@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from datetime import datetime, date
 from pydantic import validator
 
@@ -81,39 +81,39 @@ class FilmBase(SQLModel):
 
 class Film(FilmBase, table=True):
     id: Optional[int] = Field(None, primary_key=True)
-    summary: str
-    runtime: int
-    meta_score: int
-    imdb_rating: float
+    summary: str = None
+    runtime: int = None
+    meta_score: int = None
+    imdb_rating: float = None
 
-    genres: List[Genre] = Relationship(
+    genres: list[Genre] = Relationship(
         link_model=FilmGenreLink,
         back_populates="films",
     )
-    directors: List[Person] = Relationship(
+    directors: list[Person] = Relationship(
         link_model=FilmDirectorLink,
         back_populates="directed",
     )
-    writers: List[Person] = Relationship(
+    writers: list[Person] = Relationship(
         link_model=FilmWriterLink,
         back_populates="written",
     )
-    countries: List[Country] = Relationship(
+    countries: list[Country] = Relationship(
         link_model=FilmCountryLink,
         back_populates="films",
     )
-    languages: List[Language] = Relationship(
+    languages: list[Language] = Relationship(
         link_model=FilmLanguageLink,
         back_populates="films",
     )
-    media: List[CollectedMedia] = Relationship(
+    media: list[CollectedMedia] = Relationship(
         back_populates="film",
     )
 
 
 class FilmRead(FilmBase, ExportPropertiesMixin):
     id: int
-    media: List[CollectedMediaRead] = []
+    media: list[CollectedMediaRead] = []
 
     @property
     def has_poster(self):
@@ -123,16 +123,16 @@ class FilmRead(FilmBase, ExportPropertiesMixin):
 
 
 class FilmReadDetails(FilmRead):
-    summary: Optional[str]
-    runtime: Optional[int]
-    meta_score: Optional[int]
-    imdb_rating: Optional[float]
+    summary: str
+    runtime: int
+    meta_score: int
+    imdb_rating: float
 
-    genres: List[GenreRead] = []
-    directors: List[PersonRead] = []
-    writers: List[PersonRead] = []
-    countries: List[CountryRead] = []
-    languages: List[LanguageRead] = []
+    genres: list[GenreRead] = []
+    directors: list[PersonRead] = []
+    writers: list[PersonRead] = []
+    countries: list[CountryRead] = []
+    languages: list[LanguageRead] = []
 
     @property
     def has_poster(self):
@@ -155,11 +155,11 @@ class FilmPatch(FilmBase):
     imdb_rating: Optional[float] = Field(alias="imdbRating")
     production_type: ProductionType = Field(alias="Type")
 
-    genres: Optional[List[Genre]] = []
-    directors: Optional[List[Person]] = []
-    writers: Optional[List[Person]] = []
-    countries: Optional[List[Country]] = []
-    languages: Optional[List[Language]] = []
+    genres: Optional[list[Genre]] = []
+    directors: Optional[list[Person]] = []
+    writers: Optional[list[Person]] = []
+    countries: Optional[list[Country]] = []
+    languages: Optional[list[Language]] = []
 
     @validator("release_date", pre=True)
     def validate_release_date(cls, v):

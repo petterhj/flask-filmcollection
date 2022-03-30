@@ -21,6 +21,7 @@ class CollectedMediaBase(SQLModel):
     added_at: datetime = Field(
         default_factory=datetime.now,
     )
+    in_lb_list: bool = True
 
 
 class CollectedMedia(CollectedMediaBase, table=True):
