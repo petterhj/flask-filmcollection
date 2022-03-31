@@ -35,7 +35,6 @@ router = APIRouter(prefix="/films")
 @router.get(
     "/",
     response_model=List[FilmRead],
-    # response_model_by_alias=False,
 )
 async def get_films(session: Session = Depends(get_session)):
     return session.exec(select(Film)).all()
@@ -44,7 +43,6 @@ async def get_films(session: Session = Depends(get_session)):
 @router.get(
     "/{slug}",
     response_model=FilmReadDetails,
-    # response_model_by_alias=False,
 )
 async def get_film(
     film: Film = Depends(get_film_from_database)
@@ -55,7 +53,6 @@ async def get_film(
 @router.patch(
     "/{slug}",
     response_model=FilmReadDetails,
-    # response_model_by_alias=False,
 )
 async def get_film(
     patch: FilmPatch,
@@ -127,6 +124,8 @@ async def add_films(
     }).json()
 
     if r["Response"] == "False":
+        if r["Error"] == "Movie not found!":
+            return []
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=r["Error"],
@@ -138,7 +137,6 @@ async def add_films(
 @router.get(
     "/{slug}/refresh",
     response_model=FilmReadDetails,
-    # response_model_by_alias=False,
 )
 async def add_films(
     film: Film = Depends(get_film_from_database),

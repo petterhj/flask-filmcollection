@@ -1,6 +1,9 @@
+import os
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, status
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 # from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import ValidationError
@@ -16,6 +19,15 @@ from routers import (
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("ALLOW_ORIGINS", "").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth.router)
 app.include_router(films.router)
 app.include_router(genres.router)

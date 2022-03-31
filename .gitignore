@@ -2,7 +2,7 @@
 __pycache__/*
 data/*
 media/*
-*.env
+*.env*
 *.pyc
 *.log
 *.log*

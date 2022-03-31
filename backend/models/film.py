@@ -55,6 +55,12 @@ class FilmBase(SQLModel):
         max_length=125,
     )
     year: int
+    release_date: date = None
+    summary: str = None
+    runtime: int = None
+    meta_score: int = None
+    imdb_rating: float = None
+
     lb_slug: str = Field(
         None,
         sa_column=Column("lb_slug", String, unique=True),
@@ -70,7 +76,7 @@ class FilmBase(SQLModel):
         sa_column=Column("tmdb_id", String, unique=True),
         regex="[0-9]+",
     )
-    release_date: date = None
+
     production_type: ProductionType = Field(ProductionType.MOVIE)
 
     class Config:
@@ -81,10 +87,6 @@ class FilmBase(SQLModel):
 
 class Film(FilmBase, table=True):
     id: Optional[int] = Field(None, primary_key=True)
-    summary: str = None
-    runtime: int = None
-    meta_score: int = None
-    imdb_rating: float = None
 
     genres: list[Genre] = Relationship(
         link_model=FilmGenreLink,
@@ -123,11 +125,6 @@ class FilmRead(FilmBase, ExportPropertiesMixin):
 
 
 class FilmReadDetails(FilmRead):
-    summary: str
-    runtime: int
-    meta_score: int
-    imdb_rating: float
-
     genres: list[GenreRead] = []
     directors: list[PersonRead] = []
     writers: list[PersonRead] = []
