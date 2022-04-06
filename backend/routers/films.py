@@ -1,9 +1,9 @@
 import os
 import shutil
-import requests
 from datetime import datetime
 from typing import List
 
+import requests
 from fastapi import (
     APIRouter,
     Depends,
@@ -11,8 +11,8 @@ from fastapi import (
     Query,
     status,
 )
-from fastapi.responses import RedirectResponse, FileResponse
-from sqlalchemy.exc import IntegrityError
+from fastapi.responses import FileResponse
+from requests.exceptions import ConnectionError
 from sqlmodel import Session, select
 
 from database import get_session, get_film_from_database
@@ -144,10 +144,16 @@ async def add_films(
     session: Session = Depends(get_session),
     # token: str = Depends(oauth2_scheme)
 ):
-    r = requests.get("http://www.omdbapi.com", params={
-        "apikey": os.environ["OMDB_API_KEY"],
-        "i": imdb_id,
-    }).json()
+    try:
+        r = requests.get("http://www.omdbapi.com", params={
+            "apikey": os.environ["OMDB_API_KEY"],
+            "i": imdb_id,
+        }).json()
+    except ConnectionError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not connect to OMDB API",
+        )
 
     if r["Response"] == "False":
         raise HTTPException(

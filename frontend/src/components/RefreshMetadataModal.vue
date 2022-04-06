@@ -1,52 +1,46 @@
 <script setup>
-import { ref, toRef, watch } from 'vue'
-import { useStore } from '../store'
+import { ref, watch, toRef } from 'vue'
+import { useFilmStore } from '../store/film'
 
 const props = defineProps({
-  film: Object
+  open: Boolean
 })
 
-const store = useStore()
-const film = toRef(props, 'film')
-const isSearching = ref(false)
-const searchResults = ref(null)
+const store = useFilmStore()
 const selectedImdbId = ref(null)
+// const searchResults = toRef(store.searchResults)
+
+// console.log(store.searchResults)
 
 defineEmits(['close'])
 
-watch(film, (filmToSearch) => {
-  searchResults.value = []
-  if (!filmToSearch)
-    return
-  isSearching.value = true
-  store.refreshImdb(filmToSearch.lb_slug)
-    .then(results => {
-      searchResults.value = results
-    })
-    .catch((error) => console.error(error))
-    .finally(() => isSearching.value = false)
-
-})
+// watch(props.open, (modalOpened) => {
+//   if (modalOpened && store.film)
+//     store.searchMetadata()
+// })
+// watch(store.searchResults, (results) => {
+//   console.log(results)
+// })
 </script>
 
 <template>
   <input  
     type="checkbox"
     class="modal-toggle"
-    :checked="film ? true : false"
+    :checked="open"
   >
   <div
     class="modal modal-bottom sm:modal-middle cursor-pointer"
     @click.self="$emit('close')"
-    v-if="film"
+    v-if="store.film"
   >
     <label class="modal-box relative" for="">
       <h3 class="text-lg font-bold mb-4">
-        Refresh metadata for <span class="text-orange-400">{{film.display_title || film.title}}</span>
+        <span class="text-orange-400">{{store.film.display_title || store.film.title}}</span> ({{store.film.year}})
       </h3>
-      <template v-if="!isSearching">
+      <template v-if="!store.isSearching">
         <div  
-          v-if="searchResults.length === 0"
+          v-if="store.searchResults.length === 0"
           class="alert alert-warning shadow-lg"
         >
           <div>
@@ -54,38 +48,54 @@ watch(film, (filmToSearch) => {
             <span>Nothing found matching query!</span>
           </div>
         </div>
-        <div
-          class="flex"
-          v-for="(result, index) in searchResults"
+        <label
+          class="flex mb-4"
+          v-for="(result, index) in store.searchResults"
           :key="result.imdb_id"
         >
-          <div class="flex-none p-2">
-            <input
-              type="radio"
-              name="selectedResult"
-              class="radio radio-secondary"
-              :value="result.imdb_id"
-              :checked="index === 0"
-              v-model="selectedImdbId"
-            >
-          </div>
-          <div class="flex-1 p-2">
-            {{result.title}} ({{result.year}})
-          </div>
-        </div>
+          <input
+            type="radio"
+            name="selectedResult"
+            class="radio radio-secondary flex-0 mr-2"
+            :value="result.imdb_id"
+            :checked="index === 0"
+            v-model="selectedImdbId"
+          >
+          <span class="flex-1">
+            {{result.title}} ({{result.year}}) <a 
+            class="text-amber-300 hover:text-amber-200 text-xs"
+            :href="`https://imdb.com/title/${result.imdb_id}`"
+            target="_blank">IMDb</a>
+          </span>
+        </label>
       </template>
-      <p v-else>Searching...</p>
+      <progress class="progress" v-else></progress>
+
+      <hr>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Title</span>
+        </label>
+        <input type="text" class="input input-bordered w-full" :value="store.film.title">
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Display title</span>
+        </label>
+        <input type="text" class="input input-bordered w-full" :value="store.film.display_title">
+      </div>
+      <hr>
         
       <div class="modal-action">
         <button
           class="btn btn-outline"
-          @click="this.$emit('close')"
-        >Abort</button>
+          @click="$emit('close')"
+        >Close</button>
         <button
           class="btn btn-success"
-          @click="store.refreshFilmMetadata(film.lb_slug, selectedImdbId); $emit('close')"
-          :disabled="isSearching || searchResults.length === 0"
-        >Ya!y!</button>
+          @click="store.refreshMetadata(selectedImdbId); $emit('close')"
+          :disabled="store.isSearching || store.searchResults.length === 0"
+        >Refresh</button>
       </div>
     </label>
   </div>

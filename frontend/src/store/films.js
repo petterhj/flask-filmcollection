@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-export const useStore = defineStore('collection', {
+export const useFilmsStore = defineStore('films', {
   state: () => ({
     films: [],
   }),
@@ -15,28 +15,6 @@ export const useStore = defineStore('collection', {
         .then(data => (this.films = data))
         .catch((error) => console.log(error))
     },
-    async refreshImdb(slug) {
-      console.log(`Searching IMDB for ${slug}`)
-      try {
-        const response = await fetch(`${API_BASE_URL}/films/${slug}/search`)
-        const data = await response.json()
-        return data
-      } catch (error) {
-        console.log(error)
-      }
-    },
-    async refreshFilmMetadata(slug, imdb_id) {
-      console.log(`Refreshing ${slug} metadata with IMDB ID ${imdb_id}`)
-      // fetch(`${API_BASE_URL}/films/${slug}/refresh?imdb_id=${imdb_id}`)
-      //   .then(response => response.json())
-      //   .then(data => {
-      //     console.log(data)
-      //     this.films.map((film) => {
-      //       return film
-      //     })
-      //   })
-      //   .catch((error) => console.log(error))
-    }
   },
 
   getters: {
