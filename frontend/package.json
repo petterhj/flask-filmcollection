@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/vue": "^1.0.6",
     "daisyui": "^2.13.4",
     "pinia": "^2.0.12",
     "vue": "^3.2.25"

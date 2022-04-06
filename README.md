@@ -32,3 +32,11 @@ cd frontend/
 npm install
 npm run dev
 ```
+
+### Resources
+
+* [Vue.js](https://vuejs.org/)
+* [Vite](https://vitejs.dev/)
+* [Tailwind CSS](https://tailwindcss.com/)
+* [daisyUI](https://daisyui.com/)
+* [HeroIcons](https://heroicons.com/) ([tailwindlabs/heroicons](https://github.com/tailwindlabs/heroicons))
