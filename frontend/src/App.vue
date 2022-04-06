@@ -4,7 +4,7 @@ import { DotsHorizontalIcon } from '@heroicons/vue/solid'
 
 import { useFilmsStore } from './store/films'
 import { useFilmStore } from './store/film'
-import RefreshMetadataModal from './components/RefreshMetadataModal.vue'
+import FilmDetailModal from './components/FilmDetailModal.vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -97,11 +97,8 @@ function getMediaImage(mediaType) {
     </div>
   </section>
   
-  <refresh-metadata-modal
+  <film-detail-modal
     :open="filmModalOpen"
     @close="closeFilmModal"
   />
-  {{filmStore.film}}
-  <hr>
-  {{filmStore.searchResults}}
 </template>
