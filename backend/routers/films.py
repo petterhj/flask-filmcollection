@@ -117,21 +117,29 @@ async def add_films(
     session: Session = Depends(get_session),
     # token: str = Depends(oauth2_scheme)
 ):
-    r = requests.get("http://www.omdbapi.com", params={
-        "apikey": os.environ["OMDB_API_KEY"],
-        "s": film.title,
-        "y": film.year,
-    }).json()
+    results = []
 
-    if r["Response"] == "False":
-        if r["Error"] == "Movie not found!":
-            return []
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=r["Error"],
-        )
+    for title in (film.title, film.display_title):
+        if not title:
+            continue
+
+        r = requests.get("http://www.omdbapi.com", params={
+            "apikey": os.environ["OMDB_API_KEY"],
+            "s": title,
+            "y": film.year,
+        }).json()
+
+        if r["Response"] == "False":
+            if r["Error"] == "Movie not found!":
+                continue
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=r["Error"],
+            )
+        
+        results = [OmdbSearchResult(**film) for film in r["Search"]]
     
-    return [OmdbSearchResult(**film) for film in r["Search"]]
+    return results
 
 
 @router.get(

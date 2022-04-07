@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { DotsHorizontalIcon } from '@heroicons/vue/solid'
 
 import { useFilmsStore } from './store/films'
@@ -16,11 +16,6 @@ const filmModalOpen = ref(false)
 
 store.getFilms()
 
-// filmStore.$subscribe((mutation, state) => {
-//   // console.log(mutation)
-//   console.log(state)
-// })
-
 function showFilmModal(film) {
   filmStore.film = film
   filmModalOpen.value = true
@@ -30,14 +25,9 @@ function closeFilmModal() {
   filmModalOpen.value = false
 }
 
-// watch(() => filmStore.searchResults, (results) => {
-  
-// })
-
 function getMediaImage(mediaType) {
   return new URL(`./assets/${mediaType}.png`, import.meta.url).href
 }
-
 </script>
 
 <template>
