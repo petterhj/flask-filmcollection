@@ -54,13 +54,18 @@ function getMediaImage(mediaType) {
     <div
       v-for="film in store.getFilteredFilms(titleFilter)"
       :key="film.slug"
-      class="flex mb-3 p-4 bg-base-100 border-4 rounded-lg shadow-md cursor-pointer"
+      class="
+        flex gap-6 items-center mb-3 p-4
+        bg-base-100 border-4 rounded-lg
+        shadow-md cursor-pointer
+      "
       :class="[
-        filmStore.film?.lb_slug === film.lb_slug ? 'border-amber-600' : 'border-base-100'
+        filmStore.film?.lb_slug === film.lb_slug ? 'border-amber-600' : 'border-base-100',
+        film.media.length === 0 ? 'opacity-50' : ''
       ]"
       @click="showFilmModal(film)"
     >
-      <div class="flex-none w-12 mr-4">
+      <div class="flex-none w-12">
         <img
           class="rounded w-12 h-16"
           v-if="film.has_poster"
@@ -69,20 +74,22 @@ function getMediaImage(mediaType) {
         />
       </div>
       <div class="flex-1">
-        <h1 class="font-bold text-md">
-          {{ film.display_title || film.title }} | I:{{film.imdb_id}}
+        <h1 class="font-bold text-lg">
+          {{ film.display_title || film.title }}
         </h1>
         <h2 class="font-semibold text-neutral-focus text-sm">
           {{film.title}}
         </h2>
       </div>
       <div class="flex-none">
-        <img
-          v-for="media in film.media"
-          :key="media.id"
-          :src="getMediaImage(media.media_type)"
-          class="w-6 h-6 mt-2"
-        />
+        <div class="stack">
+          <img
+            v-for="media in film.media"
+            :key="media.id"
+            :src="getMediaImage(media.media_type)"
+            class="w-6 h-6 mt-2"
+          />
+        </div>
       </div>
     </div>
   </section>

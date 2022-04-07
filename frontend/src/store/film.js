@@ -51,26 +51,22 @@ export const useFilmStore = defineStore('film', {
         .catch((error) => console.log(error))
         .finally(() => this.isSearching = false)
     },
-    saveMetadata(filmPatch) {
-      console.log(`Refreshing ${this.film.lb_slug} metadata with IMDB ID ${imdb_id}`)
-      fetch(`${API_BASE_URL}/films/${this.film.lb_slug}/refresh?imdb_id=${imdb_id}`)
-        .then(response => response.json())
-        .then(data => {
-          this.film = data
-          // this.films = this.films.map((film) => {
-          //   if (film.lb_slug === data.lb_slug) {
-          //     return data
-          //   }
-          //   return film
-          // })
-        })
-        .catch((error) => console.log(error))
+    saveMetadata() {
+      console.log(this.hasPatchedMetadata)
+      console.log(`Refreshing ${this.film.lb_slug} metadata with IMDB ID ${this.metadataPatch.imdb_id}`)
+      console.log(this.metadataPatch)
+      // fetch(`${API_BASE_URL}/films/${this.film.lb_slug}/refresh?imdb_id=${imdb_id}`)
+      //   .then(response => response.json())
+      //   .then(data => {
+      //     this.film = data
+      //     // this.films = this.films.map((film) => {
+      //     //   if (film.lb_slug === data.lb_slug) {
+      //     //     return data
+      //     //   }
+      //     //   return film
+      //     // })
+      //   })
+      //   .catch((error) => console.log(error))
     },
-    setMetadataPatch(data) {
-      Object.keys(data).forEach((key) => {
-        if (key in metadataPatch)
-            this.metadataPatch[key] = data[key];
-      })
-    }
   },
 })

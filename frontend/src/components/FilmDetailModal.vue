@@ -66,6 +66,32 @@ function close() {
         <p v-if="store.film.summary" class="text-xs leading-5 mb-4">
           {{store.film.summary}}
         </p>
+        <div class="flex gap-2">
+          <div
+            title="Genres"
+            class="badge badge-md"
+            v-if="store.film.genres">
+            {{store.film.genres}}
+          </div>
+          <div
+            title="Runtime"
+            class="badge badge-md"
+            v-if="store.film.runtime">
+            {{store.film.runtime}} min
+          </div>
+          <div  
+            title="IMDb rating"
+            class="badge badge-md badge-warning"
+            v-if="store.film.imdb_rating">
+            {{store.film.imdb_rating}}
+          </div>
+          <div
+            title="Meta score"
+            class="badge badge-md badge-info"
+            v-if="store.film.meta_score">
+            {{store.film.meta_score}}
+          </div>
+        </div>
       </template>
       
       <div class="bg-base-300 mb-4 p-4 rounded-lg text-sm"

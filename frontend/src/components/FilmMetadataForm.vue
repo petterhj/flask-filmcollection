@@ -18,7 +18,8 @@ function swapMetadataTitles() {
   store.metadataPatch.display_title = currentTitle
 }
 function saveMetadata() {
-  emit('done')
+  store.saveMetadata()
+  // emit('done')
 }
 
 </script>
