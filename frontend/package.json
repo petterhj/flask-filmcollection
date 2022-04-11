@@ -10,8 +10,9 @@
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
     "daisyui": "^2.13.4",
+    "jsbarcode": "^3.11.5",
     "pinia": "^2.0.13",
-    "vue": "^3.2.25"
+    "vue": "^3.2.31"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.3.0",

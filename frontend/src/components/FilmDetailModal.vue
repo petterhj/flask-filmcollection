@@ -1,9 +1,11 @@
 <script setup>
 import { computed, ref, reactive, watch, toRef } from 'vue'
 import { RefreshIcon } from '@heroicons/vue/solid'
+// import VueBarcode from '@chenfengyuan/vue-barcode'
 
 import { useFilmStore } from '../store/film'
 import FilmMetadataForm from './FilmMetadataForm.vue'
+import Barcode  from './Barcode.vue'
 
 const store = useFilmStore()
 
@@ -29,6 +31,21 @@ function close() {
   showEditForm.value = false
   emit('close')
 }
+function getMediaImage(mediaType) {
+  return new URL(`../assets/${mediaType}.png`, import.meta.url).href
+}
+function getMediaStyle(mediaType) {
+  switch (mediaType) {
+    case 'br':
+      return 'bg-blue-900 text-blue-100'
+    case 'dvd':
+      return 'bg-zinc-200 text-zinc-900'
+    case 'uhd':
+      return 'bg-zinc-900 text-zinc-200'
+    default:
+      return 'border-neutral'
+  }
+}
 </script>
 
 <template>
@@ -44,7 +61,7 @@ function close() {
   >
     <label class="modal-box relative" for="modal">
       <!-- Header -->
-      <div class="flex mb-4">
+      <div class="flex">
         <div class="flex-1 font-bold">
           <h3 class="flex-1 text-lg">
             <span class="text-orange-400">{{store.film.display_title || store.film.title}}</span> ({{store.film.year}})
@@ -63,7 +80,7 @@ function close() {
 
       <!-- Metadata -->
       <template v-if="!showEditForm">
-        <p v-if="store.film.summary" class="text-xs leading-5 mb-4">
+        <p v-if="store.film.summary" class="text-xs leading-5 mt-3 mb-4">
           {{store.film.summary}}
         </p>
         <div class="flex gap-2">
@@ -94,10 +111,49 @@ function close() {
         </div>
       </template>
       
-      <div class="bg-base-300 mb-4 p-4 rounded-lg text-sm"
+      <div class="bg-base-300 mb-4 p-4 rounded-lg text-sm mt-4"
         v-else
       >
         <film-metadata-form @done="showEditForm = false" />
+      </div>
+
+      <!-- Media -->
+      <div class="flex flex-col gap-3 mt-6">
+        <div
+          v-for="media in store.film.media"
+          :key="media.id"
+          class="
+            flex gap-6 items-center p-4
+            bg-neutral rounded-lg
+            shadow-md cursor-pointer
+          "
+          :class="[getMediaStyle(media.media_type)]"
+        >
+          <div class="flex-1">
+            <div class="stat p-2">
+              <div class="stat-value uppercase text-lg">{{media.media_type}}</div>
+              <div class="stat-desc text-xs">{{media.added_at}}</div>
+            </div>
+            <div class="alert alert-error text-xs p-1">
+              <span>Not in Letterboxd list!</span>
+            </div>
+          </div>
+          <div class="flex-1 h-full">
+            <barcode
+              class="rounded border-4 border-base-100 p-1 bg-[#FFFFFF] h-26"
+              v-if="media.barcode"
+              :value="media.barcode"
+              line-color="#0C1322"
+              background-color="#FFFFFF"
+            />
+            <div
+              v-else
+              class="rounded border-4 border-base-100 p-1 bg-info-content h-full"
+            >
+              asdasd
+            </div>
+          </div>
+        </div>
       </div>
         
       <!--div class="modal-action">

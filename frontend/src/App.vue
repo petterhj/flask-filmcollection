@@ -45,12 +45,14 @@ function getMediaImage(mediaType) {
   </nav>
 
   <section class="p-8 pt-3">
+    <!-- Filter -->
     <input
       type="text"
       class="input input-lg input-bordered w-full mb-6"
       v-model="titleFilter"
     />
 
+    <!-- Films -->
     <div
       v-for="film in store.getFilteredFilms(titleFilter)"
       :key="film.slug"
