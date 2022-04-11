@@ -26,6 +26,11 @@ from models.film import (
 )
 from models.genre import Genre
 from models.language import Language
+from models.media import (
+    Media,
+    MediaCreate,
+    MediaRead,
+)
 from models.people import Person
 from models.services import OmdbSearchResult
 
@@ -229,3 +234,41 @@ async def refresh_film(
                 shutil.copyfileobj(r.raw, f)
 
     return film
+
+
+@router.get(
+    "/{slug}/media",
+    response_model=List[MediaRead],
+)
+async def get_film_media(
+    film: Film = Depends(get_film_from_database)
+):
+    return film.media
+
+
+@router.post(
+    "/{slug}/media",
+    response_model=List[MediaRead],
+)
+async def get_film_media(
+    media_create: MediaCreate,
+    film: Film = Depends(get_film_from_database),
+    session: Session = Depends(get_session),
+):
+    # if media_create.barcode:
+    #     if media := session.first_or_none(
+    #         Media,
+    #         Media.media_type == media_create.media_type,
+    #         Media.barcode == media_create.barcode,
+    #     ):
+    #         film.media.append(media)
+    #         return film.media
+    
+    media = Media.from_orm(media_create)
+
+    # TODO: Multiple with same barcode? Remove unique constraint on `barcode`
+    film.media.append(media)
+    session.commit()
+    session.refresh(media)
+
+    return film.media

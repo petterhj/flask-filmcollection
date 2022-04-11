@@ -31,6 +31,10 @@ class Media(MediaBase, table=True):
     )
 
 
+class MediaCreate(MediaBase):
+    pass
+
+
 class MediaRead(MediaBase):
     id: int
 
