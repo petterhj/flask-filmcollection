@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime, date
 from pydantic import validator
 
@@ -16,9 +16,8 @@ from .genre import Genre, GenreRead
 from .language import Language, LanguageRead
 from .links import (
     FilmGenreLink, FilmDirectorLink, FilmWriterLink,
-    FilmCountryLink, FilmLanguageLink
+    FilmCountryLink, FilmLanguageLink, FilmMediaLink
 )
-from .media import CollectedMedia, CollectedMediaRead
 from .people import Person, PersonRead
 
 
@@ -58,8 +57,6 @@ class FilmBase(SQLModel):
     release_date: date = None
     summary: str = None
     runtime: int = None
-    meta_score: int = None
-    imdb_rating: float = None
 
     lb_slug: str = Field(
         None,
@@ -87,6 +84,8 @@ class FilmBase(SQLModel):
 
 class Film(FilmBase, table=True):
     id: Optional[int] = Field(None, primary_key=True)
+    meta_score: int = None
+    imdb_rating: float = None
 
     genres: list[Genre] = Relationship(
         link_model=FilmGenreLink,
@@ -108,14 +107,15 @@ class Film(FilmBase, table=True):
         link_model=FilmLanguageLink,
         back_populates="films",
     )
-    media: list[CollectedMedia] = Relationship(
-        back_populates="film",
+
+    media: List["Media"] = Relationship(
+        link_model=FilmMediaLink,
+        back_populates="films",
     )
 
 
 class FilmRead(FilmBase, ExportPropertiesMixin):
     id: int
-    media: list[CollectedMediaRead] = []
 
     @property
     def has_poster(self):
@@ -124,12 +124,19 @@ class FilmRead(FilmBase, ExportPropertiesMixin):
         ))
 
 
-class FilmReadDetails(FilmRead):
+class FilmReadWithMedia(FilmRead):
+    media: List["MediaRead"] = []
+
+
+class FilmReadDetails(FilmReadWithMedia):
     genres: list[GenreRead] = []
     directors: list[PersonRead] = []
     writers: list[PersonRead] = []
     countries: list[CountryRead] = []
     languages: list[LanguageRead] = []
+
+    meta_score: int = None
+    imdb_rating: float = None
 
     @property
     def has_poster(self):
@@ -179,3 +186,9 @@ class FilmPatch(FilmBase):
 
     class Config:
         extra = "ignore"
+
+
+from .media import Media, MediaRead
+Film.update_forward_refs()
+FilmReadDetails.update_forward_refs()
+FilmReadWithMedia.update_forward_refs()

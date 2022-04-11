@@ -46,3 +46,12 @@ class FilmLanguageLink(SQLModel, table=True):
     language_id: Optional[int] = Field(
         default=None, foreign_key="language.id", primary_key=True
     )
+
+
+class FilmMediaLink(SQLModel, table=True):
+    film_id: Optional[int] = Field(
+        default=None, foreign_key="film.id", primary_key=True
+    )
+    media_id: Optional[int] = Field(
+        default=None, foreign_key="media.id", primary_key=True
+    )

@@ -15,6 +15,7 @@ from routers import (
     auth,
     films,
     genres,
+    media,
 )
 
 
@@ -31,6 +32,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(films.router)
 app.include_router(genres.router)
+app.include_router(media.router)
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

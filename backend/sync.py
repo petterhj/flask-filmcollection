@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy.orm import load_only
+from sqlalchemy.sql.expression import func
 from sqlmodel import select
 
 load_dotenv()
@@ -12,10 +13,23 @@ load_dotenv()
 from database import engine, Session
 from models.film import Film
 from models.services import LetterboxdList, LetterboxdFilm
-from models.media import CollectedMedia, MediaType
+from models.media import Media, MediaType
 
 LETTERBOXD_LIST_URL = "https://letterboxd.com/{}/list/{}/detail/page/{}"
 LETTERBOXD_USERNAME = os.environ["LB_USERNAME"]
+
+
+def _parse_film_data(film_data) -> LetterboxdFilm:
+    film_details = film_data.find("div", class_="film-detail-content")
+    title = film_details.find("a")
+    slug = title["href"].replace("/film/", "").replace("/", "").strip()
+    title = title.get_text().strip()
+    year = film_details.find("small").get_text().strip()
+    return LetterboxdFilm(
+        slug=slug,
+        title=title,
+        year=year,
+    )
 
 
 def scrape_letterboxd_list(letterboxd_list: LetterboxdList) -> LetterboxdList:
@@ -41,19 +55,9 @@ def scrape_letterboxd_list(letterboxd_list: LetterboxdList) -> LetterboxdList:
         logger.debug(f"Found {len(film_list)} film(s)")
 
         for i, film in enumerate(film_list):
-            film_details = film.find("div", class_="film-detail-content")
-            title = film_details.find("a")
-            slug = title["href"].replace("/film/", "").replace("/", "").strip()
-            title = title.get_text().strip()
-            year = film_details.find("small").get_text().strip()
-            letterboxd_list.films.append(LetterboxdFilm(
-                slug=slug,
-                title=title,
-                year=year,
-            ))
+            letterboxd_list.films.append(_parse_film_data(film))
             # TODO: Temporary test, remove this
-            if i == 2:
-                break
+            if i == 2: break
         # TODO: Remove this
         break
 
@@ -69,65 +73,76 @@ def sync_letterboxd_list(
     list_slug: str,
     media_type: MediaType
 ):
-    letterboxd_list = LetterboxdList(
+    lb_list = scrape_letterboxd_list(LetterboxdList(
         slug=list_slug,
         media_type=media_type,
-    )
-    letterboxd_list = scrape_letterboxd_list(letterboxd_list)
+    ))
 
     session = Session(engine)
 
     lb_slugs = []
 
-    for lb_film in letterboxd_list.films:
+    for lb_film in lb_list.films:
         if film := session.first_or_none(Film, Film.lb_slug == lb_film.slug):
-            logger.debug(f"Skipping film {lb_film.slug} (already in database)")
+            logger.debug(f'Skipped adding film "{film.lb_slug}" from "{list_slug}"; already in database')
+
+            existing_media_of_type = [
+                m for m in film.media if m.media_type == lb_list.media_type
+            ]
+
+            if len(existing_media_of_type) > 0:
+                logger.debug(f'Skipped adding media for "{film.lb_slug}"; {lb_list.media_type} already in database')
+            else:
+                film.media.append(Media(media_type=lb_list.media_type))
+                film.commit()
+                logger.debug(f'Adding {lb_list.media_type} media for "{film.lb_slug}"')
         else:
             # Add new film to database
             film = Film(
                 title=lb_film.title,
                 year=lb_film.year,
                 lb_slug=lb_film.slug,
+                media=[
+                    Media(media_type=lb_list.media_type)
+                ]
             )
             session.add(film)
             session.commit()
+            logger.debug(f'Added film "{film.lb_slug}" from "{list_slug}"')
 
-        if media := session.first_or_none(
-            CollectedMedia,
-            CollectedMedia.film == film,
-            CollectedMedia.media_type == letterboxd_list.media_type,
-        ):
-            if not media.in_lb_list:
-                media.in_lb_list = True
-                session.add(media)
-                session.commit()
-        else:
-            # Add new collected media to film
-            session.add(CollectedMedia(
-                media_type=letterboxd_list.media_type,
-                film=film,
-            ))
-            session.commit()
-        
         lb_slugs.append(film.lb_slug)
 
-    # Flag collected media no longer present in remote list
+    # Remove collected media (of type, and film if no more media)
     collected_not_in_remote = [
         film.lb_slug for film in session.query(
             Film
         ).options(
             load_only("lb_slug")
         ).filter(
-            Film.media.any(CollectedMedia.media_type == media_type)
+            Film.media.any(Media.media_type == media_type)
         ).all() if film.lb_slug not in lb_slugs
     ]
 
     for slug in collected_not_in_remote:
-        if film := session.first_or_none(Film, Film.lb_slug == slug):
-            logger.info(f"Flagging {slug}:media:{media_type} as missing from remote list")
-            for media in film.media:
-                media.in_lb_list = False
-                session.add(media)
+        film = session.first_or_none(Film, Film.lb_slug == slug)
+        if media_to_remove := [
+            m for m in film.media if m.media_type == lb_list.media_type
+        ]:
+            for media in media_to_remove:
+                film.media.remove(media)
+            logger.debug('Removed {} {} media for "{}"'.format(
+                len(media_to_remove), lb_list.media_type, film.lb_slug
+            ))
+        if len(film.media) == 0:
+            logger.debug(f'Removed film "{film.lb_slug}"; no more media')
+            session.delete(film)
+    
+    session.commit()
+
+    # Clean any media not linked to any film
+    for media in session.query(Media).all():
+        if len(media.films) == 0:
+            session.delete(media)
 
     session.commit()
 
@@ -140,7 +155,6 @@ if __name__ == "__main__":
 
         try:
             sync_letterboxd_list(
-
                 list_slug=list_slug,
                 media_type=MediaType(media_type)
             )

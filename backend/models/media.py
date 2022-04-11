@@ -1,10 +1,12 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import Integer
 from sqlalchemy.sql.schema import Column
 from sqlmodel import Field, Relationship, SQLModel
+
+from .links import FilmMediaLink
 
 
 class MediaType(str, Enum):
@@ -13,26 +15,28 @@ class MediaType(str, Enum):
     UHD = "uhd"
 
 
-class CollectedMediaBase(SQLModel):
+class MediaBase(SQLModel):
     media_type: MediaType
     barcode: Optional[int] = Field(
         sa_column=Column("barcode", Integer, unique=True),
     )
-    added_at: datetime = Field(
-        default_factory=datetime.now,
-    )
-    in_lb_list: bool = True
 
 
-class CollectedMedia(CollectedMediaBase, table=True):
+class Media(MediaBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    film_id: int = Field(
-        foreign_key="film.id",
-    )
-    film: "Film" = Relationship(
+
+    films: List["Film"] = Relationship(
+        link_model=FilmMediaLink,
         back_populates="media",
     )
 
 
-class CollectedMediaRead(CollectedMediaBase):
+class MediaRead(MediaBase):
     id: int
+
+
+class MediaReadDetails(MediaRead):
+    films: List["FilmRead"] = []
+
+from .film import FilmRead
+MediaReadDetails.update_forward_refs()

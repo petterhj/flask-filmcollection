@@ -22,6 +22,7 @@ from models.film import (
     FilmPatch,
     FilmRead,
     FilmReadDetails,
+    FilmReadWithMedia,
 )
 from models.genre import Genre
 from models.language import Language
@@ -34,7 +35,7 @@ router = APIRouter(prefix="/films")
 
 @router.get(
     "/",
-    response_model=List[FilmRead],
+    response_model=List[FilmReadWithMedia],
 )
 async def get_films(session: Session = Depends(get_session)):
     return session.exec(select(Film)).all()
@@ -146,7 +147,7 @@ async def add_films(
     "/{slug}/refresh",
     response_model=FilmReadDetails,
 )
-async def add_films(
+async def refresh_film(
     film: Film = Depends(get_film_from_database),
     imdb_id: str = Query(..., regex="^tt\d{7,8}$"),
     session: Session = Depends(get_session),
